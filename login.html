@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AuraHealth Enterprise Gateway | Sign In</title>
+    <link rel="stylesheet" href="ui.apps/src/main/content/jcr_root/apps/healthcare/clientlibs/clientlib-site/css/site.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            margin: 0;
+            box-sizing: border-box;
+        }
+        .login-card {
+            background: #ffffff;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 520px;
+            padding: 2.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+        }
+        .login-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            justify-content: center;
+            margin-bottom: 0.5rem;
+        }
+        .brand-icon-badge {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            background: #0284c7;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .login-brand h2 {
+            margin: 0;
+            color: #0f172a;
+            font-size: 1.6rem;
+            font-weight: 800;
+        }
+        .role-switch-tabs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            background: #f1f5f9;
+            padding: 4px;
+            border-radius: 10px;
+            margin: 1.5rem 0;
+        }
+        .role-tab {
+            padding: 0.75rem;
+            text-align: center;
+            border: none;
+            background: none;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            color: #64748b;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .role-tab.active {
+            background: #ffffff;
+            color: #0284c7;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+        }
+        .user-selector-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1.25rem;
+        }
+        .privacy-seal {
+            margin-top: 1.5rem;
+            text-align: center;
+            font-size: 0.75rem;
+            color: #94a3b8;
+            border-top: 1px solid #f1f5f9;
+            padding-top: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-card">
+        <div class="login-brand">
+            <div class="brand-icon-badge">
+                <svg class="hc-icon hc-icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v20M2 12h20"/></svg>
+            </div>
+            <h2>AuraHealth Connect</h2>
+        </div>
+        <p style="text-align: center; color: #64748b; font-size: 0.9rem; margin-top: 0;">
+            Adobe Experience Manager Clinical RBAC Gateway
+        </p>
+
+        <div class="role-switch-tabs">
+            <button class="role-tab active" id="tabDoctor" onclick="selectRole('doctor')">
+                <svg class="hc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>
+                Physician Sign In
+            </button>
+            <button class="role-tab" id="tabPatient" onclick="selectRole('patient')">
+                <svg class="hc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                Patient Sign In
+            </button>
+        </div>
+
+        <form id="loginForm" onsubmit="handleAuth(event)">
+            <!-- Doctor Picker -->
+            <div id="doctorPickerGroup" class="user-selector-box">
+                <label style="font-weight: 700; font-size: 0.85rem; color:#1e40af; display:block; margin-bottom:0.4rem;">
+                    Select Physician Account to Sign In As:
+                </label>
+                <select id="docAccountSelect" class="hc-select" onchange="updateAccountFields()">
+                    <option value="DOC-001" data-name="Dr. Sarah Jenkins, MD" data-dept="Cardiology & Vascular Medicine">Dr. Sarah Jenkins, MD (Cardiology)</option>
+                    <option value="DOC-002" data-name="Dr. Marcus Chen, DO" data-dept="Neurology & Brain Sciences">Dr. Marcus Chen, DO (Neurology)</option>
+                    <option value="DOC-003" data-name="Dr. Aliyah Patel, MD" data-dept="Pediatrics & Child Health">Dr. Aliyah Patel, MD (Pediatrics)</option>
+                    <option value="DOC-004" data-name="Dr. Robert Rodriguez, MD" data-dept="Orthopedics & Sports Medicine">Dr. Robert Rodriguez, MD (Orthopedics)</option>
+                </select>
+                <div style="font-size: 0.8rem; color: #475569; margin-top: 0.5rem;">
+                    Cross-consultation enabled: Switch accounts to test physician peer-to-peer messaging and referrals.
+                </div>
+            </div>
+
+            <!-- Patient Picker -->
+            <div id="patientPickerGroup" class="user-selector-box" style="display:none;">
+                <label style="font-weight: 700; font-size: 0.85rem; color:#065f46; display:block; margin-bottom:0.4rem;">
+                    Select Patient Account to Sign In As:
+                </label>
+                <select id="patAccountSelect" class="hc-select" onchange="updateAccountFields()">
+                    <option value="PAT-90821" data-name="Eleanor Vance" data-doc="Dr. Sarah Jenkins, MD">Eleanor Vance (Patient ID: PAT-90821)</option>
+                    <option value="PAT-90822" data-name="Liam Montgomery" data-doc="Dr. Marcus Chen, DO">Liam Montgomery (Patient ID: PAT-90822)</option>
+                    <option value="PAT-90823" data-name="Grace Thorne" data-doc="Dr. Sarah Jenkins, MD">Grace Thorne (Patient ID: PAT-90823)</option>
+                </select>
+                <div style="font-size: 0.8rem; color: #475569; margin-top: 0.5rem;">
+                    Multi-doctor access: Switch patients to consult with various medical specialists.
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Verified Account Name</label>
+                <input type="text" id="displayName" class="hc-input" value="Dr. Sarah Jenkins, MD" readonly style="background:#f1f5f9;" />
+            </div>
+
+            <div class="form-group">
+                <label>Provider License / Identity ID</label>
+                <input type="text" id="username" class="hc-input" value="DOC-001" readonly style="background:#f1f5f9;" />
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.85rem;" id="btnSubmit">
+                Sign In to Dedicated Portal &rarr;
+            </button>
+        </form>
+
+        <div class="privacy-seal">
+            <svg class="hc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <span>HIPAA Compliant & Role-Based Access Control</span>
+        </div>
+    </div>
+
+    <script src="ui.apps/src/main/content/jcr_root/apps/healthcare/clientlibs/clientlib-site/js/store.js"></script>
+    <script>
+        let currentRole = 'doctor';
+
+        function selectRole(role) {
+            currentRole = role;
+            const tabDoc = document.getElementById('tabDoctor');
+            const tabPat = document.getElementById('tabPatient');
+            const grpDoc = document.getElementById('doctorPickerGroup');
+            const grpPat = document.getElementById('patientPickerGroup');
+
+            if (role === 'doctor') {
+                tabDoc.classList.add('active');
+                tabPat.classList.remove('active');
+                grpDoc.style.display = 'block';
+                grpPat.style.display = 'none';
+            } else {
+                tabPat.classList.add('active');
+                tabDoc.classList.remove('active');
+                grpDoc.style.display = 'none';
+                grpPat.style.display = 'block';
+            }
+            updateAccountFields();
+        }
+
+        function updateAccountFields() {
+            if (currentRole === 'doctor') {
+                const sel = document.getElementById('docAccountSelect');
+                const opt = sel.options[sel.selectedIndex];
+                document.getElementById('displayName').value = opt.getAttribute('data-name');
+                document.getElementById('username').value = sel.value;
+                document.getElementById('btnSubmit').innerText = `Sign In as ${opt.getAttribute('data-name')} →`;
+            } else {
+                const sel = document.getElementById('patAccountSelect');
+                const opt = sel.options[sel.selectedIndex];
+                document.getElementById('displayName').value = opt.getAttribute('data-name');
+                document.getElementById('username').value = sel.value;
+                document.getElementById('btnSubmit').innerText = `Sign In as ${opt.getAttribute('data-name')} →`;
+            }
+        }
+
+        function handleAuth(event) {
+            event.preventDefault();
+            const btn = document.getElementById('btnSubmit');
+            btn.disabled = true;
+            btn.innerText = 'Authenticating User...';
+
+            const userObj = {
+                role: currentRole,
+                id: document.getElementById('username').value,
+                name: document.getElementById('displayName').value
+            };
+
+            HealthcareStore.setCurrentUser(userObj);
+
+            setTimeout(() => {
+                if (currentRole === 'doctor') {
+                    window.location.href = 'doctor-portal.html';
+                } else {
+                    window.location.href = 'patient-portal.html';
+                }
+            }, 300);
+        }
+
+        document.addEventListener('DOMContentLoaded', updateAccountFields);
+    </script>
+</body>
+</html>

@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doctor Clinical Workspace | AuraHealth EMR</title>
+    <link rel="stylesheet" href="ui.apps/src/main/content/jcr_root/apps/healthcare/clientlibs/clientlib-site/css/site.css">
+    <style>
+        .msg-type-badge {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.6rem;
+            border-radius: 9999px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+        .badge-peer {
+            background: #ede9fe;
+            color: #6d28d9;
+            border: 1px solid #ddd6fe;
+        }
+        .badge-patient {
+            background: #e0f2fe;
+            color: #0369a1;
+            border: 1px solid #bae6fd;
+        }
+        .compose-card {
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            padding: 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+        .brand-icon-box {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            background: #0284c7;
+            color: #ffffff;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Doctor Specific Navigation -->
+    <header class="app-header">
+        <div class="brand-logo">
+            <span class="brand-icon-box">
+                <svg class="hc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v20M2 12h20"/></svg>
+            </span>
+            <span>AuraHealth EMR • Physician Workspace</span>
+        </div>
+        <div style="display:flex; align-items:center; gap: 1rem;">
+            <div style="text-align: right; font-size: 0.85rem;">
+                <strong id="hdrDocName">Dr. Sarah Jenkins, MD</strong>
+                <div style="color: #0d9488; font-weight: 600;" id="hdrDocDept">Physician Active</div>
+            </div>
+            <button class="btn btn-secondary" style="padding: 0.4rem 0.85rem; font-size: 0.8rem; display:flex; align-items:center; gap:0.4rem;" onclick="logout()">
+                <svg class="hc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                Sign Out
+            </button>
+        </div>
+    </header>
+
+    <main class="healthcare-container">
+        <!-- Physician Profile Banner -->
+        <div class="doc-header">
+            <div class="doc-header-info">
+                <div class="doc-avatar" id="avatarDoc">SJ</div>
+                <div>
+                    <h3 style="margin:0;" id="bannerDocName">Dr. Sarah Jenkins, MD</h3>
+                    <p class="doc-submeta">
+                        <span>Metropolitan Health Medical Center</span> |
+                        <span>Specialty: <strong id="bannerDocDept">Cardiology & Vascular Medicine</strong></span> |
+                        <span>Provider ID: <strong id="bannerDocId">DOC-001</strong></span>
+                    </p>
+                </div>
+            </div>
+            <div class="doc-status-badge">
+                <span class="online-indicator"></span> Provider On-Duty • Telehealth Active
+            </div>
+        </div>
+
+        <!-- Doctor Tabs -->
+        <div class="doc-tabs">
+            <button class="doc-tab-btn active" id="tabDoc1" onclick="switchDocTab('appointments')">
+                <svg class="hc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                Schedule (<span id="cntAppts">0</span>)
+            </button>
+            <button class="doc-tab-btn" id="tabDoc2" onclick="switchDocTab('inbox')">
+                <svg class="hc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                Messages (<span id="cntInbox">0</span>)
+            </button>
+            <button class="doc-tab-btn" id="tabDoc3" onclick="switchDocTab('rx')">
+                <svg class="hc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="m8.5 8.5 7 7"/></svg>
+                E-Prescribe
+            </button>
+        </div>
+
+        <!-- TAB 1: Patient Roster & Interactive Chart -->
+        <div id="paneAppointments" class="doc-tab-content active">
+            <div class="schedule-table-card">
+                <h4 style="margin-top:0;">Today's Patient Schedule & EMR Encounters</h4>
+                <table class="hc-table">
+                    <thead>
+                        <tr>
+                            <th>Time / Date</th>
+                            <th>Patient Identity</th>
+                            <th>Reason / Visit Type</th>
+                            <th>Latest Vitals (FHIR)</th>
+                            <th>Status</th>
+                            <th>Clinical Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="docRosterBody">
+                        <!-- Populated by store.js -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Patient Chart Drawer / Modal -->
+            <div id="patientChartPanel" class="patient-chart-panel" style="display:none;">
+                <div class="chart-header">
+                    <div>
+                        <h3 id="chartPatientName" style="margin:0;">Patient Name</h3>
+                        <span id="chartPatientId" class="badge-vitals">PAT-XXXXX</span>
+                    </div>
+                    <button class="btn-close" onclick="closeChart()">&times;</button>
+                </div>
+
+                <div class="chart-body">
+                    <div class="chart-col">
+                        <h5 style="margin-top:0;">EHR Clinical History (HL7 FHIR)</h5>
+                        <p class="history-item"><strong>Primary Diagnosis:</strong> Stage 1 Essential Hypertension (ICD-10 I10)</p>
+                        <p class="history-item"><strong>Allergies:</strong> Penicillin (Severe Anaphylaxis)</p>
+                        <p class="history-item"><strong>Active Medications:</strong> Lisinopril 10mg daily</p>
+                        <p class="history-item"><strong>Lab Diagnostics:</strong> Comprehensive Metabolic Panel - Desirable</p>
+                    </div>
+                    <div class="chart-col">
+                        <h5 style="margin-top:0;">Physician Assessment & Encounter Notes</h5>
+                        <textarea id="chartNotesInput" class="hc-textarea" rows="4" placeholder="Enter clinical encounter assessment, notes, or patient instructions..."></textarea>
+                        <div style="margin-top: 10px; display: flex; gap: 10px;">
+                            <button class="btn btn-primary" onclick="saveDoctorNote()">Save Notes to Patient EHR</button>
+                            <button class="btn btn-secondary" onclick="openRxForPatient()">Write Rx Prescription</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: Communications Center (Patients & Peer Doctors) -->
+        <div id="paneInbox" class="doc-tab-content">
+            <div class="inbox-card">
+                <!-- Compose New Message -->
+                <div class="compose-card">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                        <h4 style="margin:0; display:flex; align-items:center; gap:0.4rem;">
+                            <svg class="hc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                            Compose Message to Doctor or Patient
+                        </h4>
+                        <span class="badge-peer">Clinical Collaboration & Cross-Referrals</span>
+                    </div>
+
+                    <form id="composeForm" onsubmit="sendComposedMessage(event)">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Recipient Category *</label>
+                                <select id="recipientCategory" class="hc-select" onchange="updateRecipientDropdown()">
+                                    <option value="doctor">Consulting Physician / Specialist (Peer Consult)</option>
+                                    <option value="patient">Patient (Direct Care Directive)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Select Specific Recipient *</label>
+                                <select id="recipientSelect" class="hc-select">
+                                    <!-- Populated dynamically -->
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Consultation Subject *</label>
+                            <input type="text" id="composeSubject" class="hc-input" required placeholder="e.g. Holter ECG Cross-Referral or Lab Clarification" />
+                        </div>
+
+                        <div class="form-group">
+                            <label>Confidential Clinical Message *</label>
+                            <textarea id="composeBody" rows="3" class="hc-textarea" required placeholder="Type clinical observations, telemetry inquiry, or patient update..."></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">Transmit Encrypted Direct Message</button>
+                    </form>
+                </div>
+
+                <h4 style="margin:1.5rem 0 1rem 0;">My Communications & Inbound Threads:</h4>
+                <div class="messages-list" id="docMessagesList">
+                    <!-- Populated dynamically -->
+                </div>
+
+                <!-- Reply Box -->
+                <div id="replyBox" class="reply-box" style="display:none;">
+                    <h5 id="replyHeader" style="margin-top:0;">Reply to Message</h5>
+                    <textarea id="replyText" class="hc-textarea" rows="3" placeholder="Type clinical advice or peer response (encrypted with TLS 1.3)..."></textarea>
+                    <div style="margin-top: 8px; display: flex; gap: 8px;">
+                        <button class="btn btn-primary" onclick="sendDoctorReply()">Transmit Clinical Response</button>
+                        <button class="btn btn-secondary" onclick="document.getElementById('replyBox').style.display='none'">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: E-Prescribing System -->
+        <div id="paneRx" class="doc-tab-content">
+            <div class="rx-card">
+                <h4 style="margin-top:0;">E-Prescribing & Pharmacy Order System (NCPDP / FHIR)</h4>
+                <form id="rxForm" onsubmit="issueRx(event)">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Target Patient *</label>
+                            <select id="rxPatientSelect" class="hc-select" onchange="updateRxPatientFields()">
+                                <option value="PAT-90821" data-name="Eleanor Vance">Eleanor Vance (PAT-90821)</option>
+                                <option value="PAT-90822" data-name="Liam Montgomery">Liam Montgomery (PAT-90822)</option>
+                                <option value="PAT-90823" data-name="Grace Thorne">Grace Thorne (PAT-90823)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Patient ID / MRN</label>
+                            <input type="text" id="rxPatientId" class="hc-input" value="PAT-90821" readonly style="background:#f1f5f9;" />
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Medication Name & Strength *</label>
+                            <input type="text" id="rxMedName" class="hc-input" value="Lisinopril 10mg Oral Tablet" required />
+                        </div>
+                        <div class="form-group">
+                            <label>Dosage Instructions (Sig) *</label>
+                            <input type="text" id="rxDosage" class="hc-input" value="Take 1 tablet daily in the morning" required />
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Quantity / Supply</label>
+                            <input type="text" id="rxQuantity" class="hc-input" value="30 Tablets (30 Days)" required />
+                        </div>
+                        <div class="form-group">
+                            <label>Refills</label>
+                            <select id="rxRefills" class="hc-select">
+                                <option value="3 Refills">3 Refills</option>
+                                <option value="2 Refills">2 Refills</option>
+                                <option value="1 Refill">1 Refill</option>
+                                <option value="0 Refills">0 Refills</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Designated Patient Pharmacy</label>
+                        <select id="rxPharmacy" class="hc-select">
+                            <option value="CVS Pharmacy #4190 (Main St)">CVS Pharmacy #4190 (Main St)</option>
+                            <option value="Walgreens Pharmacy #1209">Walgreens Pharmacy #1209</option>
+                            <option value="Hospital Inpatient Dispensary">Hospital Central Dispensary</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" id="btnSignRx" style="display:inline-flex; align-items:center; gap:0.4rem;">
+                        <svg class="hc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                        Sign & Transmit E-Prescription
+                    </button>
+                </form>
+                <div id="rxResultBox" class="alert-box" style="display:none; margin-top: 15px;"></div>
+            </div>
+        </div>
+    </main>
+
+    <script src="ui.apps/src/main/content/jcr_root/apps/healthcare/clientlibs/clientlib-site/js/store.js"></script>
+    <script>
+        let currentUser = HealthcareStore.getCurrentUser();
+        if (!currentUser || currentUser.role !== 'doctor') {
+            currentUser = { role: 'doctor', id: 'DOC-001', name: 'Dr. Sarah Jenkins, MD' };
+            HealthcareStore.setCurrentUser(currentUser);
+        }
+
+        document.getElementById('hdrDocName').innerText = currentUser.name;
+        document.getElementById('bannerDocName').innerText = currentUser.name;
+        document.getElementById('bannerDocId').innerText = currentUser.id;
+        const initials = currentUser.name.replace('Dr. ', '').split(' ').map(n=>n[0]).join('').substring(0,2);
+        document.getElementById('avatarDoc').innerText = initials || 'MD';
+
+        let selectedMsgId = null;
+
+        function updateRecipientDropdown() {
+            const cat = document.getElementById('recipientCategory').value;
+            const sel = document.getElementById('recipientSelect');
+            const dir = HealthcareStore.getDirectory();
+
+            if (cat === 'doctor') {
+                const others = dir.doctors.filter(d => d.id !== currentUser.id);
+                sel.innerHTML = others.map(d => `
+                    <option value="${d.id}" data-name="${d.name}" data-role="doctor">
+                        ${d.name} (${d.department})
+                    </option>
+                `).join('');
+            } else {
+                sel.innerHTML = dir.patients.map(p => `
+                    <option value="${p.id}" data-name="${p.name}" data-role="patient">
+                        ${p.name} (ID: ${p.id})
+                    </option>
+                `).join('');
+            }
+        }
+
+        function sendComposedMessage(event) {
+            event.preventDefault();
+            const sel = document.getElementById('recipientSelect');
+            const opt = sel.options[sel.selectedIndex];
+            if (!opt) return;
+
+            const newMsg = {
+                id: 'MSG-' + Math.floor(1000 + Math.random() * 9000),
+                fromId: currentUser.id,
+                fromName: currentUser.name,
+                fromRole: 'doctor',
+                toId: sel.value,
+                toName: opt.getAttribute('data-name'),
+                toRole: opt.getAttribute('data-role'),
+                subject: document.getElementById('composeSubject').value,
+                body: document.getElementById('composeBody').value,
+                timestamp: 'Just now',
+                category: opt.getAttribute('data-role') === 'doctor' ? 'Peer Physician Referral' : 'Doctor Clinical Directive',
+                reply: null
+            };
+
+            HealthcareStore.addMessage(newMsg);
+            alert(`Message encrypted and delivered to ${newMsg.toName}!`);
+            document.getElementById('composeSubject').value = '';
+            document.getElementById('composeBody').value = '';
+            renderDoctorWorkspace();
+        }
+
+        function renderDoctorWorkspace() {
+            const state = HealthcareStore.getState();
+
+            document.getElementById('cntAppts').innerText = state.appointments.length;
+            const tbody = document.getElementById('docRosterBody');
+            tbody.innerHTML = state.appointments.map(item => {
+                const isPending = item.status === 'Pending Confirmation';
+                const statusBadge = isPending 
+                    ? `<span style="background:#fef3c7; color:#92400e; padding:3px 8px; border-radius:4px; font-weight:600; font-size:0.8rem;">Pending Review</span>`
+                    : (item.status === 'Declined'
+                        ? `<span style="background:#fee2e2; color:#991b1b; padding:3px 8px; border-radius:4px; font-weight:600; font-size:0.8rem;">Declined</span>`
+                        : `<span class="badge-success">${item.status}</span>`);
+
+                return `
+                <tr>
+                    <td><strong>${item.time}</strong><br><small class="text-muted">${item.date}</small></td>
+                    <td>
+                        <div><strong>${item.patientName}</strong></div>
+                        <small class="text-muted">ID: ${item.patientId} | Age: ${item.age || 38}</small>
+                    </td>
+                    <td>${item.type}</td>
+                    <td><span class="badge-vitals">${item.vitals || 'BP: 120/80 • HR: 72'}</span></td>
+                    <td>${statusBadge}</td>
+                    <td>
+                        <div class="action-buttons-group">
+                            ${isPending ? `
+                                <button class="btn-sm btn-primary" style="background:#16a34a;" onclick="confirmDoctorAppointment('${item.id}', '${item.patientName}')">
+                                    Approve & Confirm
+                                </button>
+                                <button class="btn-sm btn-secondary" style="background:#dc2626;" onclick="declineDoctorAppointment('${item.id}', '${item.patientName}')">
+                                    Decline
+                                </button>
+                            ` : `
+                                <button class="btn-sm btn-primary" onclick="openChart('${item.patientId}', '${item.patientName}')">
+                                    View Chart
+                                </button>
+                                <button class="btn-sm btn-secondary" onclick="startTelehealth('${item.patientName}')">
+                                    Telehealth
+                                </button>
+                            `}
+                        </div>
+                    </td>
+                </tr>
+            `;}).join('');
+
+            const relevantMessages = state.messages.filter(m => m.toId === currentUser.id || m.fromId === currentUser.id);
+            document.getElementById('cntInbox').innerText = relevantMessages.length;
+            const msgList = document.getElementById('docMessagesList');
+
+            if (relevantMessages.length === 0) {
+                msgList.innerHTML = '<p class="text-muted" style="padding:1rem;">No message threads found.</p>';
+            } else {
+                msgList.innerHTML = relevantMessages.map(m => {
+                    const isOutbound = m.fromId === currentUser.id;
+                    const isPeer = m.fromRole === 'doctor' && m.toRole === 'doctor';
+                    const badgeClass = isPeer ? 'badge-peer' : 'badge-patient';
+                    const categoryLabel = isPeer ? 'Physician Peer Consult' : (isOutbound ? 'Outbound to Patient' : 'Inbound Patient Query');
+
+                    return `
+                        <div class="message-item">
+                            <div class="message-meta">
+                                <div>
+                                    <span class="msg-type-badge ${badgeClass}">${categoryLabel}</span>
+                                    <strong style="margin-left:8px;">${isOutbound ? `To: ${m.toName}` : `From: ${m.fromName}`}</strong>
+                                </div>
+                                <span class="message-time">${m.timestamp}</span>
+                            </div>
+                            <div class="message-subject" style="margin-top:0.4rem;">Subject: ${m.subject}</div>
+                            <p class="message-snippet">"${m.body}"</p>
+                            ${m.reply ? `
+                                <div style="background:#f0fdf4; border:1px solid #bbf7d0; padding:0.6rem; margin-top:0.5rem; font-size:0.85rem; border-radius:6px;">
+                                    <strong>Response from ${m.reply.doctorName}:</strong> ${m.reply.text}
+                                    <small class="text-muted" style="display:block; margin-top:2px;">${m.reply.timestamp}</small>
+                                </div>
+                            ` : (isOutbound ? `
+                                <div class="message-actions">
+                                    <span class="status-tag" style="color:#64748b;">Delivered & Awaiting Reply</span>
+                                </div>
+                            ` : `
+                                <div class="message-actions">
+                                    <button class="btn-sm btn-primary" onclick="openReplyDrawer('${m.id}', '${m.fromName}', '${m.subject}')">Reply to Thread</button>
+                                    <span class="status-tag">Status: Pending Response</span>
+                                </div>
+                            `)}
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        function switchDocTab(tab) {
+            document.getElementById('tabDoc1').classList.toggle('active', tab === 'appointments');
+            document.getElementById('tabDoc2').classList.toggle('active', tab === 'inbox');
+            document.getElementById('tabDoc3').classList.toggle('active', tab === 'rx');
+
+            document.getElementById('paneAppointments').classList.toggle('active', tab === 'appointments');
+            document.getElementById('paneInbox').classList.toggle('active', tab === 'inbox');
+            document.getElementById('paneRx').classList.toggle('active', tab === 'rx');
+        }
+
+        function openChart(patientId, patientName) {
+            document.getElementById('chartPatientName').innerText = patientName;
+            document.getElementById('chartPatientId').innerText = patientId;
+            document.getElementById('patientChartPanel').style.display = 'block';
+        }
+
+        function confirmDoctorAppointment(appointmentId, patientName) {
+            HealthcareStore.updateAppointmentStatus(appointmentId, 'Confirmed');
+            alert(`Appointment for ${patientName} has been officially approved and confirmed!`);
+            renderDoctorWorkspace();
+        }
+
+        function declineDoctorAppointment(appointmentId, patientName) {
+            if (confirm(`Are you sure you want to decline this appointment request for ${patientName}?`)) {
+                HealthcareStore.updateAppointmentStatus(appointmentId, 'Declined');
+                renderDoctorWorkspace();
+            }
+        }
+
+        function closeChart() {
+            document.getElementById('patientChartPanel').style.display = 'none';
+        }
+
+        function saveDoctorNote() {
+            alert('Clinical assessment noted on patient medical record.');
+            document.getElementById('chartNotesInput').value = '';
+            closeChart();
+        }
+
+        function openRxForPatient() {
+            switchDocTab('rx');
+        }
+
+        function openReplyDrawer(id, from, subject) {
+            selectedMsgId = id;
+            document.getElementById('replyHeader').innerText = `Reply to ${from} regarding "${subject}"`;
+            document.getElementById('replyBox').style.display = 'block';
+        }
+
+        function sendDoctorReply() {
+            const reply = document.getElementById('replyText').value;
+            if (!reply) { alert('Please enter your response.'); return; }
+            HealthcareStore.replyMessage(selectedMsgId, {
+                fromName: currentUser.name,
+                fromId: currentUser.id,
+                text: reply
+            });
+            alert('Clinical response transmitted to thread!');
+            document.getElementById('replyText').value = '';
+            document.getElementById('replyBox').style.display = 'none';
+            renderDoctorWorkspace();
+        }
+
+        function updateRxPatientFields() {
+            const sel = document.getElementById('rxPatientSelect');
+            document.getElementById('rxPatientId').value = sel.value;
+        }
+
+        function issueRx(event) {
+            event.preventDefault();
+            const sel = document.getElementById('rxPatientSelect');
+            const opt = sel.options[sel.selectedIndex];
+
+            const rx = {
+                rxNumber: 'RX-' + Math.floor(100000 + Math.random() * 900000),
+                patientName: opt.getAttribute('data-name'),
+                patientId: sel.value,
+                doctorName: currentUser.name,
+                medication: document.getElementById('rxMedName').value,
+                dosage: document.getElementById('rxDosage').value,
+                quantity: document.getElementById('rxQuantity').value,
+                refills: document.getElementById('rxRefills').value,
+                pharmacy: document.getElementById('rxPharmacy').value,
+                date: new Date().toISOString().split('T')[0],
+                status: 'Active / Sent to Pharmacy'
+            };
+            HealthcareStore.addPrescription(rx);
+            const box = document.getElementById('rxResultBox');
+            box.style.display = 'block';
+            box.innerHTML = `<strong>E-Prescription Successfully Issued!</strong> RX ID: <code>${rx.rxNumber}</code>. Transmitted to ${rx.pharmacy} for ${rx.patientName}.`;
+        }
+
+        function startTelehealth(patient) {
+            alert(`Launching HIPAA-compliant WebRTC Telehealth Session with ${patient}...\nRoom ID: TELEHEALTH-${Math.floor(1000 + Math.random() * 9000)}`);
+        }
+
+        function logout() {
+            HealthcareStore.setCurrentUser(null);
+            window.location.href = 'login.html';
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            updateRecipientDropdown();
+            renderDoctorWorkspace();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Self-Service Health Portal | AuraHealth</title>
+    <link rel="stylesheet" href="ui.apps/src/main/content/jcr_root/apps/healthcare/clientlibs/clientlib-site/css/site.css">
+    <style>
+        .brand-icon-box {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            background: #0284c7;
+            color: #ffffff;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Patient Dedicated Navigation Header -->
+    <header class="app-header">
+        <div class="brand-logo">
+            <span class="brand-icon-box">
+                <svg class="hc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v20M2 12h20"/></svg>
+            </span>
+            <span>AuraHealth Patient Connect</span>
+        </div>
+        <div style="display:flex; align-items:center; gap: 1rem;">
+            <div style="text-align: right; font-size: 0.85rem;">
+                <strong id="hdrPatName">Eleanor Vance</strong>
+                <div style="color: #0284c7; font-weight: 600;" id="hdrPatId">Patient ID: PAT-90821</div>
+            </div>
+            <button class="btn btn-secondary" style="padding: 0.4rem 0.85rem; font-size: 0.8rem; display:flex; align-items:center; gap:0.4rem;" onclick="logout()">
+                <svg class="hc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                Sign Out
+            </button>
+        </div>
+    </header>
+
+    <main class="healthcare-container">
+        <!-- Patient Profile Card Banner -->
+        <div class="doc-header" style="background:#ffffff; border-radius:12px; padding:1.5rem; margin-bottom:1.5rem; box-shadow:var(--hc-shadow);">
+            <div class="doc-header-info">
+                <div class="user-avatar" id="avatarPat" style="width:52px; height:52px; border-radius:50%; font-size:1.2rem; font-weight:700;">EV</div>
+                <div>
+                    <h3 style="margin:0;" id="bannerPatName">Eleanor Vance</h3>
+                    <p class="doc-submeta">
+                        <span>DOB: <strong>1988-04-12</strong></span> |
+                        <span>Blood Group: <strong>O+</strong></span> |
+                        <span>Verified Account ID: <strong id="bannerPatId">PAT-90821</strong></span>
+                    </p>
+                </div>
+            </div>
+            <div class="portal-badge" style="background:#ecfdf5; color:#065f46; border:1px solid #a7f3d0; padding:0.4rem 0.85rem; border-radius:9999px; font-weight:600; font-size:0.85rem;">
+                HL7 FHIR R4 Connected
+            </div>
+        </div>
+
+        <!-- Dedicated Tab Navigation (Single Clean Line) -->
+        <div class="doc-tabs">
+            <button class="doc-tab-btn active" id="tabPatBtn1" onclick="switchPatientTab('vitals')">
+                <svg class="hc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                Vitals & Labs
+            </button>
+            <button class="doc-tab-btn" id="tabPatBtn2" onclick="switchPatientTab('prescriptions')">
+                <svg class="hc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="m8.5 8.5 7 7"/></svg>
+                Prescriptions (<span id="cntPatRx">1</span>)
+            </button>
+            <button class="doc-tab-btn" id="tabPatBtn3" onclick="switchPatientTab('my-appointments')">
+                <svg class="hc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                My Visits (<span id="cntPatAppts">0</span>)
+            </button>
+            <button class="doc-tab-btn" id="tabPatBtn4" onclick="switchPatientTab('booking')">
+                <svg class="hc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+                Book Visit
+            </button>
+            <button class="doc-tab-btn" id="tabPatBtn5" onclick="switchPatientTab('messages')">
+                <svg class="hc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                Messages (<span id="cntPatMsg">1</span>)
+            </button>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- TAB 1: HEALTH VITALS & DIAGNOSTIC LABS         -->
+        <!-- ============================================== -->
+        <div id="patPaneVitals" class="doc-tab-content active">
+            <div class="cmp-patient-portal" style="margin-bottom:0; box-shadow:none; padding:1.5rem; border:1px solid var(--hc-border);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                    <h4 style="margin:0;">Current Vitals & Bio-Telemetry (HL7 FHIR Observations)</h4>
+                    <span class="badge-success">Verified Synced</span>
+                </div>
+
+                <div class="vitals-grid">
+                    <div class="vital-card">
+                        <span class="vital-label">Blood Pressure</span>
+                        <span class="vital-val">120/78</span>
+                        <span class="vital-status status-normal">Normal (mmHg)</span>
+                    </div>
+                    <div class="vital-card">
+                        <span class="vital-label">Resting Heart Rate</span>
+                        <span class="vital-val">72</span>
+                        <span class="vital-status status-normal">Optimal bpm</span>
+                    </div>
+                    <div class="vital-card">
+                        <span class="vital-label">SpO2 Oxygen Saturation</span>
+                        <span class="vital-val">99%</span>
+                        <span class="vital-status status-normal">Optimal</span>
+                    </div>
+                    <div class="vital-card">
+                        <span class="vital-label">Fasting Blood Sugar</span>
+                        <span class="vital-val">92</span>
+                        <span class="vital-status status-normal">Normal (mg/dL)</span>
+                    </div>
+                </div>
+
+                <h4 style="margin:1.5rem 0 1rem 0;">Diagnostic Lab Results & Pathology Reports</h4>
+                <div class="lab-reports-table-container">
+                    <table class="hc-table">
+                        <thead>
+                            <tr>
+                                <th>Diagnostic Panel</th>
+                                <th>Date Performed</th>
+                                <th>Result Summary</th>
+                                <th>Verified By</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Comprehensive Metabolic Panel (CMP)</strong></td>
+                                <td>2026-09-15</td>
+                                <td><span class="badge-success">All Values in Normal Range</span></td>
+                                <td>Dr. Sarah Jenkins, MD</td>
+                                <td>
+                                    <a href="/bin/healthcare/export-ehr-pdf?test=Comprehensive_Metabolic_Panel&patientId=PAT-90821" download class="link-download" style="display:inline-flex; align-items:center; gap:0.35rem;">
+                                        <svg class="hc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                        Download PDF (EHR)
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>Lipid Panel with Chol/HDL Ratio</strong></td>
+                                <td>2026-08-01</td>
+                                <td><span class="badge-success">Desirable (Total Chol: 182)</span></td>
+                                <td>Dr. Sarah Jenkins, MD</td>
+                                <td>
+                                    <a href="/bin/healthcare/export-ehr-pdf?test=Lipid_Panel&patientId=PAT-90821" download class="link-download" style="display:inline-flex; align-items:center; gap:0.35rem;">
+                                        <svg class="hc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                        Download PDF (EHR)
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>HbA1c Glycated Hemoglobin</strong></td>
+                                <td>2026-05-10</td>
+                                <td><span class="badge-success">5.4% (Non-Diabetic)</span></td>
+                                <td>Dr. Sarah Jenkins, MD</td>
+                                <td>
+                                    <a href="/bin/healthcare/export-ehr-pdf?test=HbA1c_Glycated_Hemoglobin&patientId=PAT-90821" download class="link-download" style="display:inline-flex; align-items:center; gap:0.35rem;">
+                                        <svg class="hc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                        Download PDF (EHR)
+                                    </a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- TAB 2: MY PRESCRIPTIONS                        -->
+        <!-- ============================================== -->
+        <div id="patPanePrescriptions" class="doc-tab-content">
+            <div class="rx-card" style="background:#ffffff; padding:1.75rem; border-radius:12px; border:1px solid var(--hc-border);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem;">
+                    <div>
+                        <h4 style="margin:0;">Active Medication Orders (NCPDP / E-Prescribe)</h4>
+                        <p style="margin:0.25rem 0 0 0; color:var(--hc-text-muted); font-size:0.85rem;">
+                            Prescriptions issued directly by your doctors and transmitted to your designated pharmacy.
+                        </p>
+                    </div>
+                    <button class="btn btn-secondary" style="font-size:0.85rem; padding:0.5rem 1rem;" onclick="requestRefillPill()">
+                        Request Refill from Doctor
+                    </button>
+                </div>
+
+                <div id="patientPrescriptionsContainer">
+                    <!-- Populated dynamically by store.js -->
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- TAB 3: MY APPOINTMENTS & CONFIRMATION STATUS   -->
+        <!-- ============================================== -->
+        <div id="patPaneMyAppointments" class="doc-tab-content">
+            <div style="background:#ffffff; border-radius:12px; border:1px solid var(--hc-border); padding:1.75rem;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem;">
+                    <div>
+                        <h4 style="margin:0;">My Appointments & Confirmation Roster</h4>
+                        <p style="margin:0.25rem 0 0 0; color:var(--hc-text-muted); font-size:0.85rem;">
+                            Track whether requested doctor visits are confirmed, pending doctor review, or completed.
+                        </p>
+                    </div>
+                    <button class="btn btn-primary" style="font-size:0.85rem; padding:0.5rem 1rem;" onclick="switchPatientTab('booking')">
+                        + Request New Visit
+                    </button>
+                </div>
+
+                <div id="patientAppointmentsListContainer">
+                    <!-- Populated dynamically by store.js -->
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- TAB 4: SCHEDULE / REQUEST DOCTOR APPOINTMENT   -->
+        <!-- ============================================== -->
+        <div id="patPaneBooking" class="doc-tab-content">
+            <div class="cmp-appointment-booking" style="background:#ffffff; border-radius:12px; border:1px solid var(--hc-border); padding:1.75rem;">
+                <div class="booking-header">
+                    <h3 style="margin:0 0 0.5rem 0;">Schedule a Doctor Visit</h3>
+                    <p style="margin:0 0 1.5rem 0; color:var(--hc-text-muted);">
+                        Book an encounter that synchronizes directly with the chosen physician's clinical calendar.
+                    </p>
+                </div>
+
+                <form id="patientBookingForm" onsubmit="bookDoctorAppointment(event)">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Patient Full Name</label>
+                            <input type="text" id="inpPatientBookingName" class="hc-input" value="Eleanor Vance" readonly style="background:#f1f5f9;" />
+                        </div>
+                        <div class="form-group">
+                            <label>Medical Department *</label>
+                            <select id="patientDeptSelect" class="hc-select" onchange="updateDoctorsByDept()">
+                                <option value="Cardiology">Cardiology & Vascular Medicine</option>
+                                <option value="Neurology">Neurology & Brain Sciences</option>
+                                <option value="Pediatrics">Pediatrics & Child Health</option>
+                                <option value="Orthopedics">Orthopedics & Sports Medicine</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Attending Physician *</label>
+                            <select id="patientDoctorSelect" class="hc-select">
+                                <!-- Populated dynamically from directory -->
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Preferred Date *</label>
+                            <input type="date" id="patientApptDate" required class="hc-input"/>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Time Slot *</label>
+                            <select id="patientTimeSelect" class="hc-select">
+                                <option value="09:00 AM">09:00 AM - 09:45 AM</option>
+                                <option value="11:30 AM">11:30 AM - 12:15 PM</option>
+                                <option value="02:00 PM">02:00 PM - 02:45 PM</option>
+                                <option value="04:00 PM">04:00 PM - 04:45 PM</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Encounter Type</label>
+                            <select id="patientVisitType" class="hc-select">
+                                <option value="In-Clinic Visit">In-Clinic Visit</option>
+                                <option value="Telehealth Video Consultation">Telehealth Video Consultation</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Reason for Visit / Symptoms Description</label>
+                        <textarea id="patientSymptoms" rows="3" class="hc-textarea" placeholder="Detail your symptoms, reason for consultation, or routine check-up goal..."></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" id="btnBookAppt">Confirm & Book Appointment</button>
+                </form>
+
+                <div id="patientBookingSuccess" class="alert-box" style="display:none; margin-top: 1rem;"></div>
+            </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- TAB 4: SECURE DIRECT MESSAGES WITH ANY DOCTOR  -->
+        <!-- ============================================== -->
+        <div id="patPaneMessages" class="doc-tab-content">
+            <div class="cmp-consultation-request" style="background:#ffffff; border-radius:12px; border:1px solid var(--hc-border); padding:1.75rem;">
+                <div class="consultation-info">
+                    <h3 style="margin:0 0 0.5rem 0;">Message Any Doctor or Clinical Specialist</h3>
+                    <p style="margin:0 0 1rem 0; color:var(--hc-text-muted);">
+                        Select which doctor or specialist you wish to consult with. The message routes straight into that doctor's individual clinical inbox.
+                    </p>
+                    <div class="security-guarantee">
+                        <svg class="hc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        <strong>HIPAA Encrypted In-Transit</strong>: Transmits confidential clinical inquiries directly to the selected provider.
+                    </div>
+                </div>
+
+                <form id="patientInquiryForm" onsubmit="sendInquiryToDoctor(event)">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Select Target Doctor / Specialist *</label>
+                            <select id="msgDoctorSelect" class="hc-select">
+                                <!-- Populated dynamically from directory -->
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Inquiry Topic *</label>
+                            <select id="inquirySubject" class="hc-select">
+                                <option value="Medication Refill & Prescription Query">Medication Refill & Prescription Query</option>
+                                <option value="Lab Test Clarification">Lab Test & Diagnostic Clarification</option>
+                                <option value="Post-op Follow-up">Post-Procedure / Follow-up Question</option>
+                                <option value="Second Opinion / Specialist Advice">Second Opinion / Specialist Advice</option>
+                                <option value="General Health Query">General Health Query</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Your Message to Doctor *</label>
+                        <textarea id="inquiryBody" rows="3" class="hc-textarea" required placeholder="Type your confidential inquiry for the selected physician..."></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-secondary">Transmit Message to Doctor</button>
+                </form>
+
+                <div style="margin-top: 2rem;">
+                    <h4 style="margin:0 0 1rem 0;">My Message Threads & Doctor Responses:</h4>
+                    <div id="patientRepliesContainer">
+                        <!-- Populated by store.js -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- ClientLib Shared Store and Scripts -->
+    <script src="ui.apps/src/main/content/jcr_root/apps/healthcare/clientlibs/clientlib-site/js/store.js"></script>
+    <script>
+        let currentUser = HealthcareStore.getCurrentUser();
+        if (!currentUser || currentUser.role !== 'patient') {
+            currentUser = { role: 'patient', id: 'PAT-90821', name: 'Eleanor Vance' };
+            HealthcareStore.setCurrentUser(currentUser);
+        }
+
+        document.getElementById('hdrPatName').innerText = currentUser.name;
+        document.getElementById('hdrPatId').innerText = 'Patient ID: ' + currentUser.id;
+        document.getElementById('bannerPatName').innerText = currentUser.name;
+        document.getElementById('bannerPatId').innerText = currentUser.id;
+        document.getElementById('inpPatientBookingName').value = currentUser.name;
+        const initials = currentUser.name.split(' ').map(n=>n[0]).join('').substring(0,2);
+        document.getElementById('avatarPat').innerText = initials || 'PT';
+
+        function populateDoctorSelects() {
+            const dir = HealthcareStore.getDirectory();
+            const msgDocSel = document.getElementById('msgDoctorSelect');
+            const bookDocSel = document.getElementById('patientDoctorSelect');
+
+            const optionsHtml = dir.doctors.map(d => `
+                <option value="${d.id}" data-name="${d.name}">
+                    ${d.name} (${d.department})
+                </option>
+            `).join('');
+
+            msgDocSel.innerHTML = optionsHtml;
+            bookDocSel.innerHTML = optionsHtml;
+        }
+
+        function updateDoctorsByDept() {
+            const dept = document.getElementById('patientDeptSelect').value;
+            const dir = HealthcareStore.getDirectory();
+            const bookDocSel = document.getElementById('patientDoctorSelect');
+
+            const filtered = dir.doctors.filter(d => d.department.toLowerCase().includes(dept.toLowerCase()));
+            const list = filtered.length > 0 ? filtered : dir.doctors;
+
+            bookDocSel.innerHTML = list.map(d => `
+                <option value="${d.id}" data-name="${d.name}">
+                    ${d.name} (${d.department})
+                </option>
+            `).join('');
+        }
+
+        function switchPatientTab(tabId) {
+            document.getElementById('tabPatBtn1').classList.toggle('active', tabId === 'vitals');
+            document.getElementById('tabPatBtn2').classList.toggle('active', tabId === 'prescriptions');
+            document.getElementById('tabPatBtn3').classList.toggle('active', tabId === 'my-appointments');
+            document.getElementById('tabPatBtn4').classList.toggle('active', tabId === 'booking');
+            document.getElementById('tabPatBtn5').classList.toggle('active', tabId === 'messages');
+
+            document.getElementById('patPaneVitals').classList.toggle('active', tabId === 'vitals');
+            document.getElementById('patPanePrescriptions').classList.toggle('active', tabId === 'prescriptions');
+            document.getElementById('patPaneMyAppointments').classList.toggle('active', tabId === 'my-appointments');
+            document.getElementById('patPaneBooking').classList.toggle('active', tabId === 'booking');
+            document.getElementById('patPaneMessages').classList.toggle('active', tabId === 'messages');
+        }
+
+        function requestRefillPill() {
+            switchPatientTab('messages');
+            document.getElementById('inquirySubject').value = 'Medication Refill & Prescription Query';
+            document.getElementById('inquiryBody').value = 'Hello Doctor, could you please authorize a 30-day refill for my medication? Thank you.';
+            document.getElementById('inquiryBody').focus();
+        }
+
+        function renderPatientPortal() {
+            const state = HealthcareStore.getState();
+
+            // My Appointments Roster
+            const myAppts = state.appointments.filter(a => a.patientId === currentUser.id || a.patientName === currentUser.name);
+            document.getElementById('cntPatAppts').innerText = myAppts.length;
+            const apptsBox = document.getElementById('patientAppointmentsListContainer');
+            if (myAppts.length === 0) {
+                apptsBox.innerHTML = '<p class="text-muted" style="padding:1rem;">No appointments scheduled yet. Click "+ Request New Visit" above to book one.</p>';
+            } else {
+                apptsBox.innerHTML = myAppts.map(a => {
+                    const isConfirmed = a.status === 'Confirmed';
+                    const isDeclined = a.status === 'Declined';
+                    const statusTag = isConfirmed
+                        ? `<span style="background:#dcfce7; color:#15803d; border:1px solid #bbf7d0; padding:4px 10px; border-radius:9999px; font-weight:700; font-size:0.8rem;">Confirmed by Doctor</span>`
+                        : (isDeclined
+                            ? `<span style="background:#fee2e2; color:#991b1b; border:1px solid #fecaca; padding:4px 10px; border-radius:9999px; font-weight:700; font-size:0.8rem;">Declined / Slot Unavailable</span>`
+                            : `<span style="background:#fef3c7; color:#92400e; border:1px solid #fde68a; padding:4px 10px; border-radius:9999px; font-weight:700; font-size:0.8rem;">Pending Doctor Review</span>`);
+
+                    return `
+                        <div style="border:1px solid #e2e8f0; border-radius:10px; padding:1.25rem; margin-bottom:1rem; background:#ffffff; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <h4 style="margin:0; font-size:1.05rem; color:#0f172a;">
+                                    ${a.type}
+                                </h4>
+                                ${statusTag}
+                            </div>
+                            <div style="margin:0.5rem 0; font-size:0.9rem; color:#334155;">
+                                <strong>Date & Time:</strong> ${a.date} at ${a.time} • <strong>Attending:</strong> ${a.doctorName} (${a.department || 'General'})
+                            </div>
+                            <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.85rem; color:#64748b; margin-top:0.75rem; border-top:1px solid #f1f5f9; padding-top:0.5rem;">
+                                <span>Reference ID: <code>${a.id}</code></span>
+                                <div>
+                                    ${isConfirmed ? `
+                                        <span style="color:#15803d; font-weight:600;">Check-in ready on appointment day</span>
+                                    ` : `
+                                        <span style="color:#92400e; font-style:italic;">Awaiting provider schedule confirmation</span>
+                                    `}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            const myRx = state.prescriptions.filter(p => p.patientId === currentUser.id || p.patientName === currentUser.name);
+            document.getElementById('cntPatRx').innerText = myRx.length;
+            const rxBox = document.getElementById('patientPrescriptionsContainer');
+            if (myRx.length === 0) {
+                rxBox.innerHTML = '<p class="text-muted">No active prescriptions on file.</p>';
+            } else {
+                rxBox.innerHTML = myRx.map(p => `
+                    <div style="border:1px solid #e2e8f0; border-radius:10px; padding:1.25rem; margin-bottom:1rem; background:#ffffff; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <h4 style="margin:0; font-size:1.1rem; color:#0f172a; display:flex; align-items:center; gap:0.4rem;">
+                                <svg class="hc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="m8.5 8.5 7 7"/></svg>
+                                ${p.medication}
+                            </h4>
+                            <span class="badge-success">${p.status}</span>
+                        </div>
+                        <div style="margin:0.5rem 0; font-size:0.95rem; color:#334155;">
+                            <strong>Instructions:</strong> ${p.dosage}
+                        </div>
+                        <div style="display:flex; gap:1.5rem; font-size:0.85rem; color:#64748b; flex-wrap:wrap;">
+                            <span>Quantity: <strong>${p.quantity}</strong></span>
+                            <span>Refills: <strong>${p.refills}</strong></span>
+                            <span>Prescribed by: <strong>${p.doctorName}</strong></span>
+                            <span>Pharmacy: <strong>${p.pharmacy}</strong></span>
+                            <span>Date: <strong>${p.date}</strong></span>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            const myMessages = state.messages.filter(m => m.fromId === currentUser.id || m.toId === currentUser.id);
+            document.getElementById('cntPatMsg').innerText = myMessages.length;
+            const repBox = document.getElementById('patientRepliesContainer');
+
+            if (myMessages.length === 0) {
+                repBox.innerHTML = '<p class="text-muted">No message threads found.</p>';
+            } else {
+                repBox.innerHTML = myMessages.map(m => `
+                    <div style="border:1px solid #e2e8f0; border-radius:10px; padding:1.25rem; margin-bottom:1rem; background:#ffffff;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:0.25rem;">
+                            <strong style="color:#0284c7;">To: ${m.toName} • Topic: ${m.subject}</strong>
+                            <small class="text-muted">${m.timestamp}</small>
+                        </div>
+                        <div style="font-size:0.9rem; color:#334155; margin:0.35rem 0;"><strong>Your message:</strong> "${m.body}"</div>
+                        ${m.reply ? `
+                            <div style="margin-top:0.75rem; padding:0.85rem; background:#ecfdf5; border-radius:8px; border:1px solid #bbf7d0; color:#065f46; font-size:0.9rem;">
+                                <strong>Physician Response (${m.reply.doctorName}):</strong>
+                                <div style="margin-top:0.25rem;">"${m.reply.text}"</div>
+                                <small class="text-muted" style="display:block; margin-top:2px;">${m.reply.timestamp}</small>
+                            </div>
+                        ` : `
+                            <div style="margin-top:0.5rem; font-size:0.85rem; color:#d97706; font-weight:600;">
+                                Pending response from ${m.toName}...
+                            </div>
+                        `}
+                    </div>
+                `).join('');
+            }
+
+            const dateInp = document.getElementById('patientApptDate');
+            if (dateInp) {
+                dateInp.value = new Date().toISOString().split('T')[0];
+            }
+        }
+
+        function bookDoctorAppointment(event) {
+            event.preventDefault();
+            const btn = document.getElementById('btnBookAppt');
+            const docSel = document.getElementById('patientDoctorSelect');
+            const docOpt = docSel.options[docSel.selectedIndex];
+
+            btn.disabled = true;
+            btn.innerText = 'Registering with Doctor Schedule...';
+
+            const appt = {
+                id: 'APT-' + Math.floor(10000 + Math.random() * 90000),
+                patientName: currentUser.name,
+                patientId: currentUser.id,
+                age: 38,
+                doctorName: docOpt.getAttribute('data-name'),
+                doctorId: docSel.value,
+                department: document.getElementById('patientDeptSelect').value,
+                date: document.getElementById('patientApptDate').value,
+                time: document.getElementById('patientTimeSelect').value,
+                type: document.getElementById('patientVisitType').value + ' - ' + (document.getElementById('patientSymptoms').value || 'Consultation'),
+                status: 'Pending Confirmation',
+                vitals: 'BP: 120/78 • HR: 72 bpm'
+            };
+
+            setTimeout(() => {
+                HealthcareStore.addAppointment(appt);
+                btn.disabled = false;
+                btn.innerText = 'Request Appointment with Doctor';
+                const box = document.getElementById('patientBookingSuccess');
+                box.style.display = 'block';
+                box.innerHTML = `<strong>Appointment Request Submitted!</strong><br>Reference ID: <code>${appt.id}</code> on ${appt.date} at ${appt.time}.<br>Status: <span style="background:#fef3c7; color:#92400e; padding:2px 8px; border-radius:4px; font-weight:600;">Pending Doctor Confirmation</span>.<br>Your visit has been submitted to ${appt.doctorName}. The doctor can now review and approve it.`;
+            }, 500);
+        }
+
+        function sendInquiryToDoctor(event) {
+            event.preventDefault();
+            const docSel = document.getElementById('msgDoctorSelect');
+            const docOpt = docSel.options[docSel.selectedIndex];
+
+            const msg = {
+                id: 'MSG-' + Math.floor(1000 + Math.random() * 9000),
+                fromId: currentUser.id,
+                fromName: currentUser.name,
+                fromRole: 'patient',
+                toId: docSel.value,
+                toName: docOpt.getAttribute('data-name'),
+                toRole: 'doctor',
+                subject: document.getElementById('inquirySubject').value,
+                body: document.getElementById('inquiryBody').value,
+                timestamp: 'Just now',
+                category: 'Patient Direct Inquiry',
+                reply: null
+            };
+
+            HealthcareStore.addMessage(msg);
+            alert(`Your encrypted query has been delivered to ${msg.toName}'s clinical inbox.`);
+            document.getElementById('inquiryBody').value = '';
+            renderPatientPortal();
+        }
+
+        function logout() {
+            HealthcareStore.setCurrentUser(null);
+            window.location.href = 'login.html';
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            populateDoctorSelects();
+            renderPatientPortal();
+        });
+    </script>
+</body>
+</html>
