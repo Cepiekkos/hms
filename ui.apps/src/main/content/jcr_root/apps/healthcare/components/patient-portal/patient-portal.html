@@ -1,0 +1,51 @@
+<div class="cmp-patient-portal"
+     data-sly-use.portal="com.healthcare.core.models.PatientPortalModel">
+
+    <div class="portal-header">
+        <div class="portal-user-info">
+            <div class="user-avatar">EV</div>
+            <div>
+                <h3>${portal.patientRecord.fullName}</h3>
+                <p class="patient-submeta">ID: <strong>${portal.patientRecord.patientId}</strong> | DOB: ${portal.patientRecord.dob} | Blood Type: ${portal.patientRecord.bloodGroup}</p>
+            </div>
+        </div>
+        <div class="portal-badge">FHIR R4 Connected</div>
+    </div>
+
+    <!-- Vitals KPI Cards -->
+    <h4 class="section-title">Current Health Metrics & Vitals</h4>
+    <div class="vitals-grid">
+        <sly data-sly-list.vital="${portal.patientRecord.vitals}">
+            <div class="vital-card">
+                <span class="vital-label">${vital.type}</span>
+                <span class="vital-val">${vital.value}</span>
+                <span class="vital-status status-normal">${vital.status}</span>
+            </div>
+        </sly>
+    </div>
+
+    <!-- Clinical Lab Reports -->
+    <h4 class="section-title">Diagnostic Test Results & EHR Lab Reports</h4>
+    <div class="lab-reports-table-container">
+        <table class="hc-table">
+            <thead>
+                <tr>
+                    <th>Test Description</th>
+                    <th>Date Performed</th>
+                    <th>Result Summary</th>
+                    <th>FHIR Document Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <sly data-sly-list.report="${portal.patientRecord.labReports}">
+                    <tr>
+                        <td class="font-bold">${report.test}</td>
+                        <td>${report.date}</td>
+                        <td><span class="badge badge-success">${report.result}</span></td>
+                        <td><a href="javascript:void(0)" onclick="alert('Exporting FHIR Document Reference for ' + '${report.test}')" class="link-download">Download PDF (EHR)</a></td>
+                    </tr>
+                </sly>
+            </tbody>
+        </table>
+    </div>
+</div>

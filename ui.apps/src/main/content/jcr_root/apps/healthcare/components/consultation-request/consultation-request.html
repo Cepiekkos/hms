@@ -1,0 +1,28 @@
+<div class="cmp-consultation-request">
+    <div class="consultation-box">
+        <div class="consultation-info">
+            <h3>Direct Physician Consultation</h3>
+            <p>Send an encrypted message directly to your clinical care team. Non-emergency replies typically arrive within 4-6 business hours.</p>
+            <div class="security-guarantee">
+                🔒 <strong>HIPAA & GDPR Compliant</strong>: All medical data transmitted is encrypted in-transit (TLS 1.3) and at-rest (AES-256).
+            </div>
+        </div>
+
+        <form id="consultationForm" class="consultation-form" onsubmit="HealthcareApp.sendConsultation(event)">
+            <div class="form-group">
+                <label for="consultSubject">Inquiry Category</label>
+                <select id="consultSubject" class="hc-select">
+                    <option value="Medication Refill">Medication Refill & Prescription Query</option>
+                    <option value="Lab Test Clarification">Lab Test & Diagnostic Result Clarification</option>
+                    <option value="Post-op Follow-up">Post-Procedure / Surgical Follow-up</option>
+                    <option value="General Health Query">General Health & Wellness Question</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="consultMessage">Message Details</label>
+                <textarea id="consultMessage" rows="4" class="hc-textarea" required placeholder="Type your inquiry for Dr. Jenkins or care coordinator..."></textarea>
+            </div>
+            <button type="submit" class="btn btn-secondary">Transmit Encrypted Message</button>
+        </form>
+    </div>
+</div>

@@ -1,0 +1,30 @@
+<div class="cmp-doctor-directory"
+     data-sly-use.model="com.healthcare.core.models.DoctorDirectoryModel">
+
+    <div class="directory-header">
+        <h2 class="directory-title">${model.title}</h2>
+        <p class="directory-subtitle">Find certified healthcare specialists and book immediate consultations.</p>
+        <div class="directory-filter">
+            <input type="text" id="doctorSearchInput" placeholder="Filter by doctor name or specialty..." class="hc-input" onkeyup="HealthcareApp.filterDoctors()"/>
+        </div>
+    </div>
+
+    <div class="doctor-cards-grid" id="doctorCardsGrid">
+        <sly data-sly-list.doctor="${model.doctors}">
+            <div class="doctor-card" data-department="${doctor.department}" data-name="${doctor.name}">
+                <div class="doctor-card-badge">${doctor.department}</div>
+                <h3 class="doctor-name">${doctor.name}</h3>
+                <div class="doctor-meta">
+                    <span class="meta-item">🩺 Experience: ${doctor.experience}</span>
+                    <span class="meta-item">⭐ Rating: ${doctor.rating}</span>
+                    <span class="meta-item">🕒 Hours: ${doctor.availability}</span>
+                </div>
+                <div class="doctor-actions">
+                    <button class="btn btn-primary" onclick="HealthcareApp.selectDoctor('${doctor.id}', '${doctor.name}', '${doctor.department}')">
+                        Book Appointment
+                    </button>
+                </div>
+            </div>
+        </sly>
+    </div>
+</div>

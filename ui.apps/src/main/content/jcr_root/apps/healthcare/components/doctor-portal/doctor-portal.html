@@ -1,0 +1,191 @@
+<div class="cmp-doctor-portal"
+     data-sly-use.doctor="com.healthcare.core.models.DoctorPortalModel">
+
+    <!-- Doctor Header Profile -->
+    <div class="doc-header">
+        <div class="doc-header-info">
+            <div class="doc-avatar">SJ</div>
+            <div>
+                <h3>${doctor.doctorProfile.name}</h3>
+                <p class="doc-submeta">
+                    <span>🏥 ${doctor.doctorProfile.hospital}</span> |
+                    <span>Department: <strong>${doctor.doctorProfile.department}</strong></span> |
+                    <span>License: ${doctor.doctorProfile.license}</span>
+                </p>
+            </div>
+        </div>
+        <div class="doc-status-badge">
+            <span class="online-indicator"></span> On Duty • Available for Consultations
+        </div>
+    </div>
+
+    <!-- Doctor Dashboard Tabs -->
+    <div class="doc-tabs">
+        <button class="doc-tab-btn active" onclick="DoctorApp.switchTab('appointments')">📅 Today's Patient Schedule (3)</button>
+        <button class="doc-tab-btn" onclick="DoctorApp.switchTab('inbox')">💬 Patient Encrypted Messages (2)</button>
+        <button class="doc-tab-btn" onclick="DoctorApp.switchTab('prescription')">💊 Rx Prescription & Clinical Orders</button>
+    </div>
+
+    <!-- TAB 1: Patient Appointments & EHR Review -->
+    <div id="tabAppointments" class="doc-tab-content active">
+        <div class="schedule-table-card">
+            <h4>Today's Appointments & Clinical Encounter Roster</h4>
+            <table class="hc-table">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Patient Details</th>
+                        <th>Visit Type</th>
+                        <th>Latest Vitals (FHIR)</th>
+                        <th>Status</th>
+                        <th>Doctor Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <sly data-sly-list.item="${doctor.scheduledPatients}">
+                        <tr>
+                            <td class="font-bold">${item.time}</td>
+                            <td>
+                                <div><strong>${item.patientName}</strong></div>
+                                <small class="text-muted">ID: ${item.patientId} | Age: ${item.age}</small>
+                            </td>
+                            <td>${item.type}</td>
+                            <td><span class="badge-vitals">${item.vitalsSummary}</span></td>
+                            <td><span class="badge badge-success">${item.status}</span></td>
+                            <td>
+                                <div class="action-buttons-group">
+                                    <button class="btn-sm btn-primary" onclick="DoctorApp.openPatientChart('${item.patientId}', '${item.patientName}')">
+                                        📋 View Chart / EHR
+                                    </button>
+                                    <button class="btn-sm btn-secondary" onclick="DoctorApp.startTelehealth('${item.patientName}')">
+                                        📹 Start Video Call
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </sly>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Dynamic Patient Clinical Chart Review & Notes Modal / Panel -->
+        <div id="patientChartPanel" class="patient-chart-panel" style="display:none;">
+            <div class="chart-header">
+                <div>
+                    <h3 id="chartPatientName">Eleanor Vance</h3>
+                    <span id="chartPatientId" class="badge">PAT-90821</span>
+                </div>
+                <button class="btn-close" onclick="DoctorApp.closePatientChart()">&times;</button>
+            </div>
+
+            <div class="chart-body">
+                <div class="chart-col">
+                    <h5>Clinical History & Diagnosis Summary</h5>
+                    <p class="history-item"><strong>Primary Diagnosis:</strong> Stage 1 Essential Hypertension (ICD-10 I10)</p>
+                    <p class="history-item"><strong>Allergies:</strong> Penicillin (Severe), Sulfa Drugs (Mild)</p>
+                    <p class="history-item"><strong>Active Medications:</strong> Lisinopril 10mg daily, Omega-3 1000mg</p>
+                    <p class="history-item"><strong>Last Lab Tests:</strong> Comprehensive Metabolic Panel (Normal - Sept 15, 2026)</p>
+                </div>
+                <div class="chart-col">
+                    <h5>Physician Encounter Notes & Consultation Action</h5>
+                    <textarea id="doctorClinicalNotes" class="hc-textarea" rows="4" placeholder="Enter clinical encounter assessment, observation notes, or treatment plan..."></textarea>
+                    <div style="margin-top: 10px; display: flex; gap: 10px;">
+                        <button class="btn btn-primary" onclick="DoctorApp.saveClinicalNotes()">Save Notes to Patient EHR</button>
+                        <button class="btn btn-secondary" onclick="DoctorApp.prefillPrescription('Eleanor Vance')">Write Rx Prescription</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 2: Patient Inquiries & Encrypted Messages -->
+    <div id="tabInbox" class="doc-tab-content">
+        <div class="inbox-card">
+            <h4>Direct Patient Communications</h4>
+            <div class="messages-list">
+                <sly data-sly-list.msg="${doctor.patientMessages}">
+                    <div class="message-item">
+                        <div class="message-meta">
+                            <strong>${msg.patientName} (${msg.patientId})</strong>
+                            <span class="message-time">${msg.time}</span>
+                        </div>
+                        <div class="message-subject">Subject: ${msg.subject}</div>
+                        <p class="message-snippet">"${msg.snippet}"</p>
+                        <div class="message-actions">
+                            <button class="btn-sm btn-primary" onclick="DoctorApp.replyToPatient('${msg.patientName}', '${msg.subject}')">Reply to Patient</button>
+                            <span class="status-tag">${msg.status}</span>
+                        </div>
+                    </div>
+                </sly>
+            </div>
+
+            <!-- Reply Box -->
+            <div id="replyBox" class="reply-box" style="display:none;">
+                <h5 id="replyingToTitle">Reply to Patient</h5>
+                <textarea id="doctorReplyText" class="hc-textarea" rows="3" placeholder="Type doctor clinical response (encrypted with TLS 1.3)..."></textarea>
+                <div style="margin-top: 8px;">
+                    <button class="btn btn-primary" onclick="DoctorApp.sendDoctorReply()">Transmit Encrypted Reply</button>
+                    <button class="btn btn-secondary" onclick="DoctorApp.cancelReply()">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 3: Digital Prescription (E-Prescribe) -->
+    <div id="tabPrescription" class="doc-tab-content">
+        <div class="rx-card">
+            <h4>E-Prescribing & Pharmacy Order System (NCPDP / FHIR)</h4>
+            <form id="rxForm" onsubmit="DoctorApp.issuePrescription(event)">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Patient Full Name</label>
+                        <input type="text" id="rxPatientName" class="hc-input" value="Eleanor Vance" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Patient ID / MRN</label>
+                        <input type="text" id="rxPatientId" class="hc-input" value="PAT-90821" required />
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Medication Name & Strength</label>
+                        <input type="text" id="rxMedName" class="hc-input" value="Lisinopril 10mg Oral Tablet" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Dosage Instructions (Sig)</label>
+                        <input type="text" id="rxDosage" class="hc-input" value="Take 1 tablet by mouth daily in the morning" required />
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Quantity / Days Supply</label>
+                        <input type="text" id="rxQuantity" class="hc-input" value="30 Tablets (30 Days Supply)" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Refills Allowed</label>
+                        <select id="rxRefills" class="hc-select">
+                            <option value="3">3 Refills</option>
+                            <option value="2">2 Refills</option>
+                            <option value="1">1 Refill</option>
+                            <option value="0">0 (No Refills)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Designated Pharmacy</label>
+                    <select id="rxPharmacy" class="hc-select">
+                        <option value="CVS Pharmacy #4190">CVS Pharmacy #4190 (Main St)</option>
+                        <option value="Walgreens Pharmacy #1209">Walgreens Pharmacy #1209</option>
+                        <option value="Hospital Inpatient Dispensary">Hospital Central Pharmacy</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn btn-primary" id="btnSignRx">✍️ Sign & Transmit E-Prescription</button>
+            </form>
+            <div id="rxResultBox" class="alert-box" style="display:none; margin-top: 15px;"></div>
+        </div>
+    </div>
+</div>
